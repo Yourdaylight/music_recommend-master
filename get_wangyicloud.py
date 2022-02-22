@@ -1,13 +1,26 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import traceback
 
 import django
 import requests
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "music.settings")
-
 django.setup()
+from user.models import Music
+
+
+def save_to_database(item):
+    try:
+        if isinstance(item, dict):
+            Music.objects.get_or_create(name=item["name"], sump=item.get("sump"),
+                                        artist=item.get('artist', "未知歌手"),
+                                        pic=item.get("pic", "https://p2.music.126.net/G91csin09maPrNgqcUKnBQ==/109951165698553069.jpg?param=50y50"),
+                                        album=item.get("album", "未知"), comments=item.get("comment"),
+                                        years=item.get("years"))
+    except Exception as e:
+        traceback.print_exc()
 
 
 def get_all_hotSong():  # 获取热歌榜所有歌曲名称和id
@@ -26,9 +39,8 @@ def get_all_hotSong():  # 获取热歌榜所有歌曲名称和id
     pat4 = r'<span title="(.*?)"><a class="" href="/artist?id=\d*?'
     hot_song_name = re.compile(pat2).findall(result)  # 获取所有热门歌曲名称
     hot_song_id = re.compile(pat3).findall(result)  # 获取所有热门歌曲对应的Id
-    hot_song_author = re.compile(pat4).findall(result)
 
-    return hot_song_name, hot_song_id, hot_song_author
+    return hot_song_name, hot_song_id
 
 
 def get_hotComments(hot_song_name, hot_song_id):
@@ -48,25 +60,24 @@ def get_hotComments(hot_song_name, hot_song_id):
     num = 0
     fhandle = open('./song_comments', 'a', encoding='utf-8')  # 写入文件
     fhandle.write(hot_song_name + ':' + '\n')
-
     for item in hot_comments:
         liked_count = item.get("likedCount", 0)
         update_time = item.get("timeStr", "2022-1-1")
+        # todo artist,pic_url
         res["name"] = hot_song_name
         res["num"] = liked_count
-
+        res["sump"] = hot_song_id
+        res['years'] = update_time
+        res["comment"] = item.get("content")
+        save_to_database(res)
         num += 1
         fhandle.write(str(num) + '.' + item['content'] + '\n')
     fhandle.write('\n==============================================\n\n')
     fhandle.close()
 
 
-def save_to_database():
-    pass
-
-
 def main():
-    hot_song_name, hot_song_id, hot_song_author = get_all_hotSong()  # 获取热歌榜所有歌曲名称和id
+    hot_song_name, hot_song_id = get_all_hotSong()  # 获取热歌榜所有歌曲名称和id
     player_iframe = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id={}&auto=1&height=66"></iframe>'
     num = 0
     while num < len(hot_song_name):  # 保存所有热歌榜中的热评
@@ -78,12 +89,11 @@ def main():
 
 if __name__ == '__main__':
 
-    hot_song_name, hot_song_id, hot_song_author = get_all_hotSong()  # 获取热歌榜所有歌曲名称和id
-    for i, j, k in zip(hot_song_name, hot_song_id, hot_song_author):
-        print(i, "=", j, "=", k)
-    # num = 0
-    # while num < len(hot_song_name):  # 保存所有热歌榜中的热评
-    #     print('正在抓取第%d首歌曲热评...' % (num + 1))
-    #     get_hotComments(hot_song_name[num], hot_song_id[num])
-    #     print('第%d首歌曲热评抓取成功' % (num + 1))
-    #     num += 1
+    hot_song_name, hot_song_id = get_all_hotSong()  # 获取热歌榜所有歌曲名称和id
+
+    num = 0
+    while num < len(hot_song_name):  # 保存所有热歌榜中的热评
+        print('正在抓取第%d首歌曲热评...' % (num + 1))
+        get_hotComments(hot_song_name[num], hot_song_id[num])
+        print('第%d首歌曲热评抓取成功' % (num + 1))
+        num += 1

@@ -32,14 +32,14 @@ class Tags(models.Model):
 class Music(models.Model):
     tags = models.ManyToManyField(Tags, verbose_name='标签', blank=True)
     collect = models.ManyToManyField(User, verbose_name="收藏者", blank=True)
-    sump = models.IntegerField(verbose_name="收藏人数", default=0)
-    name = models.CharField(verbose_name="歌曲名称", max_length=128, unique=True)
+    sump = models.IntegerField(verbose_name="歌曲id")
+    name = models.CharField(verbose_name="歌曲名称", max_length=128)
     artist = models.CharField(verbose_name="歌手", max_length=128)
     album = models.CharField(verbose_name='专辑名称', max_length=128)
     years = models.CharField(verbose_name="年份", max_length=128)
     comments = models.TextField(verbose_name="评论")
     num = models.IntegerField(verbose_name="浏览量", default=0)
-    pic = models.URLField(verbose_name="封面图片", max_length=256)
+    pic = models.URLField(verbose_name="封面图片", max_length=512)
 
     class Meta:
         verbose_name = "歌曲"
