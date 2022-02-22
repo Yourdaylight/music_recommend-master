@@ -1,0 +1,117 @@
+{
+	"info": {
+		"_postman_id": "7f243add-c9fb-401f-a255-fc73bc211402",
+		"name": "django_recomend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "lzhlzh",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "123456",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/login/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"login",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "lzhlzh",
+							"type": "text"
+						},
+						{
+							"key": "password2",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "email",
+							"value": "526494747@qq.com",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "lzh",
+							"type": "text"
+						},
+						{
+							"key": "phone",
+							"value": "123456",
+							"type": "text"
+						},
+						{
+							"key": "address",
+							"value": "123456",
+							"type": "text"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/register/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"register",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "all_music",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		}
+	]
+}
