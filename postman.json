@@ -105,11 +105,141 @@
 			"response": []
 		},
 		{
-			"name": "all_music",
+			"name": "music(歌曲详情)",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "music_id",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/music/1901371647/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"music",
+						"1901371647",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "all_music（全部音乐，一共只有200首，一次返回）",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "collect（收藏歌曲）",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Session",
+						"value": "lzhlzh",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "lzhlzh",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/collect/1901371647/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"collect",
+						"1901371647",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "decollect（取消收藏）",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/decollect/1901371647/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"decollect",
+						"1901371647",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "mycollect（我的收藏）",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "lzhlzh",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/mycollect/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"mycollect",
+						""
+					]
+				}
 			},
 			"response": []
 		}

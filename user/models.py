@@ -49,6 +49,18 @@ class Music(models.Model):
         return self.name
 
 
+# class Collect(models.Model):
+#     sump = models.IntegerField(verbose_name="歌曲id")
+#     username = models.CharField(verbose_name="歌曲名称")
+#
+#     class Meta:
+#         verbose_name = "收藏"
+#         verbose_name_plural = "收藏"
+#
+#     def __str__(self):
+#         return self.username
+
+
 class Rate(models.Model):
     music = models.ForeignKey(
         Music, on_delete=models.CASCADE, blank=True, null=True, verbose_name="歌曲id"
