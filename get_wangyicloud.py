@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import re
+import time
 import traceback
 
 import django
 import requests
+from bs4 import BeautifulSoup
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "music.settings")
 django.setup()
@@ -18,34 +21,15 @@ def save_to_database(item):
                                         artist=item.get('artist', "未知歌手"),
                                         pic=item.get("pic", "https://p2.music.126.net/G91csin09maPrNgqcUKnBQ==/109951165698553069.jpg?param=50y50"),
                                         album=item.get("album", "未知"), comments=item.get("comment"),
-                                        years=item.get("years"))
+                                        years=item.get("years"), num=item.get("num"))
     except Exception as e:
         traceback.print_exc()
 
 
-def get_all_hotSong():  # 获取热歌榜所有歌曲名称和id
-    url = 'http://music.163.com/discover/toplist?id=3778678'  # 网易云云音乐热歌榜url
-    header = {  # 请求头部
-        'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-    }
-    request = requests.get(url=url, headers=header)
-    html = str(request.content)
-    pat1 = r'<ul class="f-hide"><li><a href="/song\?id=\d*?">.*</a></li></ul>'  # 进行第一次筛选的正则表达式
-    result = re.compile(pat1).findall(html)  # 用正则表达式进行筛选
-    result = result[0]  # 获取tuple的第一个元素
 
-    pat2 = r'<li><a href="/song\?id=\d*?">(.*?)</a></li>'  # 进行歌名筛选的正则表达式
-    pat3 = r'<li><a href="/song\?id=(\d*?)">.*?</a></li>'  # 进行歌ID筛选的正则表达式
-    pat4 = r'<span title="(.*?)"><a class="" href="/artist?id=\d*?'
-    hot_song_name = re.compile(pat2).findall(result)  # 获取所有热门歌曲名称
-    hot_song_id = re.compile(pat3).findall(result)  # 获取所有热门歌曲对应的Id
-
-    return hot_song_name, hot_song_id
-
-
-def get_hotComments(hot_song_name, hot_song_id):
+def get_hotComments(hot_song_name, hot_song_id, album, artist, pic_url):
     res = {}
-    url = 'http://music.163.com/weapi/v1/resource/comments/R_SO_4_' + hot_song_id + '?csrf_token='  # 歌评url
+    url = 'http://music.163.com/weapi/v1/resource/comments/R_SO_4_' + str(hot_song_id) + '?csrf_token='  # 歌评url
     header = {  # 请求头部
         'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
     }
@@ -56,44 +40,62 @@ def get_hotComments(hot_song_name, hot_song_id):
     request = requests.post(url, headers=header, data=data)
     json_dict = request.json()
     hot_comments = json_dict.get('hotComments', [])  # 获取json中的热门评论
-
     num = 0
-    fhandle = open('./song_comments', 'a', encoding='utf-8')  # 写入文件
-    fhandle.write(hot_song_name + ':' + '\n')
     for item in hot_comments:
         liked_count = item.get("likedCount", 0)
         update_time = item.get("timeStr", "2022-1-1")
-        # todo artist,pic_url
         res["name"] = hot_song_name
         res["num"] = liked_count
         res["sump"] = hot_song_id
         res['years'] = update_time
         res["comment"] = item.get("content")
+        res["artist"] = artist
+        res["album"] = album
+        res["pic"] = pic_url
         save_to_database(res)
         num += 1
-        fhandle.write(str(num) + '.' + item['content'] + '\n')
-    fhandle.write('\n==============================================\n\n')
-    fhandle.close()
+        print(str(num) + '.' + item['content'] + '\n')
 
 
 def main():
-    hot_song_name, hot_song_id = get_all_hotSong()  # 获取热歌榜所有歌曲名称和id
-    player_iframe = '<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id={}&auto=1&height=66"></iframe>'
-    num = 0
-    while num < len(hot_song_name):  # 保存所有热歌榜中的热评
-        print('正在抓取第%d首歌曲热评...' % (num + 1))
-        get_hotComments(hot_song_name[num], hot_song_id[num])
-        print('第%d首歌曲热评抓取成功' % (num + 1))
-        num += 1
+    url1 = 'http://music.163.com/discover/toplist?id=3778678'  # 云音乐热歌榜
+    # UA必須要設置，未设置获取的网页不完整
+    headers = {
+        'Cookie': '__e_=1515461191756; _ntes_nnid=af802a7dd2cafc9fef605185da6e73fb,1515461190617; _ntes_nuid=af802a7dd2cafc9fef605185da6e73fb; JSESSIONID-WYYY=HMyeRdf98eDm%2Bi%5CRnK9iB%5ChcSODhA%2Bh4jx5t3z20hhwTRsOCWhBS5Cpn%2B5j%5CVfMIu0i4bQY9sky%5CsvMmHhuwud2cDNbFRD%2FHhWHE61VhovnFrKWXfDAp%5CqO%2B6cEc%2B%2BIXGz83mwrGS78Goo%2BWgsyJb37Oaqr0IehSp288xn5DhgC3Cobe%3A1515585307035; _iuqxldmzr_=32; __utma=94650624.61181594.1515583507.1515583507.1515583507.1; __utmc=94650624; __utmz=94650624.1515583507.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmb=94650624.4.10.1515583507',
+        'Host': 'music.163.com',
+        'Refere': 'http://music.163.com/',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36'
+    }
+
+    response = requests.get(url1, headers=headers)
+    html = response.text
+    soup = BeautifulSoup(html, 'lxml')
+    # 找到json数据
+    textarea = soup.find('textarea').text
+    contents = json.loads(str(textarea))
+    for item in contents:
+        # 发行时间
+        t1 = time.localtime(item.get('publishTime') / 1000)
+        public_time = time.strftime("%Y-%m-%d %H:%M:%S", t1)
+        # 歌曲时长
+        play_time = item.get('duration') / 1000
+        min = str(play_time / 60)
+        sec = str(play_time % 60)
+        if len(sec) < 2:
+            sec = '0' + str(sec)
+        # 歌手
+        artist = item.get('artists')[0].get('name')
+        # 歌名
+        music_name = item.get('name')
+        # 专辑
+        album = item.get('album').get('name')
+        # 图片链接
+        pic_url = item.get("album").get("picUrl")
+        # 歌曲的id
+        hot_song_id = item.get("id")
+        get_hotComments(music_name, hot_song_id, album, artist, pic_url)
 
 
 if __name__ == '__main__':
-
-    hot_song_name, hot_song_id = get_all_hotSong()  # 获取热歌榜所有歌曲名称和id
-
-    num = 0
-    while num < len(hot_song_name):  # 保存所有热歌榜中的热评
-        print('正在抓取第%d首歌曲热评...' % (num + 1))
-        get_hotComments(hot_song_name[num], hot_song_id[num])
-        print('第%d首歌曲热评抓取成功' % (num + 1))
-        num += 1
+    main()
