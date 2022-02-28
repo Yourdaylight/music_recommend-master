@@ -49,16 +49,16 @@ class Music(models.Model):
         return self.name
 
 
-# class Collect(models.Model):
-#     sump = models.IntegerField(verbose_name="歌曲id")
-#     username = models.CharField(verbose_name="歌曲名称")
-#
-#     class Meta:
-#         verbose_name = "收藏"
-#         verbose_name_plural = "收藏"
-#
-#     def __str__(self):
-#         return self.username
+class Collect(models.Model):
+    sump = models.IntegerField(verbose_name="歌曲id")
+    username = models.CharField(max_length=256, verbose_name="歌曲名称")
+
+    class Meta:
+        verbose_name = "收藏"
+        verbose_name_plural = "收藏"
+
+    def __str__(self):
+        return self.username
 
 
 class Rate(models.Model):
@@ -81,13 +81,13 @@ class Rate(models.Model):
         verbose_name_plural = verbose_name
 
 
-class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="用户")
-    content = models.CharField(max_length=64, verbose_name="内容")
-    create_time = models.DateTimeField(auto_now_add=True)
-    good = models.IntegerField(verbose_name="点赞", default=0)
-    music = models.ForeignKey(Music, on_delete=models.CASCADE, verbose_name="歌曲")
-
+class Detail(models.Model):
+    comments = models.TextField(verbose_name="所有评论")
+    tags = models.TextField(verbose_name="歌曲标签")
+    rate = models.IntegerField(verbose_name="评分", default=0)
+    sump = models.IntegerField(verbose_name="歌曲id")
     class Meta:
-        verbose_name = "评论"
+        verbose_name = "歌曲详情"
         verbose_name_plural = verbose_name
+
+

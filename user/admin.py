@@ -15,11 +15,6 @@ class MusicAdmin(admin.ModelAdmin):
     list_filter = ("artist", "album")
 
 
-class ScoreAdmin(admin.ModelAdmin):
-    list_display = ("music", "num", "com", "fen")
-    search_fields = ("music", "num", "com", "fen")
-
-
 class ActionAdmin(admin.ModelAdmin):
     def show_all_join(self, obj):
         return [a.name for a in obj.user.all()]
@@ -38,12 +33,6 @@ class CommenAdmin(admin.ModelAdmin):
     list_filter = ("user", "music")
 
 
-class ActionCommenAdmin(admin.ModelAdmin):
-    list_display = ("user", "action", "create_time")
-    search_fields = ("user", "action")
-    list_filter = ("user", "action")
-
-
 class LiuyanAdmin(admin.ModelAdmin):
     list_display = ("user", "create_time")
     search_fields = ("user",)
@@ -53,5 +42,5 @@ class LiuyanAdmin(admin.ModelAdmin):
 admin.site.register(Tags)
 admin.site.register(User, UserAdmin)
 admin.site.register(Music, MusicAdmin)
-# admin.site.register(Score, ScoreAdmin)
-admin.site.register(Comment, CommenAdmin)
+
+
