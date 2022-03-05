@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "7f243add-c9fb-401f-a255-fc73bc211402",
+		"_postman_id": "d02405eb-875f-4a6a-966b-45179190d495",
 		"name": "django_recomend",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -141,11 +141,50 @@
 			"response": []
 		},
 		{
+			"name": "search(搜索)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "music_name",
+							"value": "孤勇者",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "lzh",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://s3.nsloop.com:2375/search/",
+					"protocol": "http",
+					"host": [
+						"s3",
+						"nsloop",
+						"com"
+					],
+					"port": "2375",
+					"path": [
+						"search",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "all_music（全部音乐，一共只有200首，一次返回）",
 			"request": {
 				"method": "GET",
 				"header": [],
-				"url": null
+				"url": {
+					"raw": ""
+				}
 			},
 			"response": []
 		},
@@ -237,6 +276,34 @@
 					"port": "2375",
 					"path": [
 						"mycollect",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "item_recommend",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "lzhlzh",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/item_recommend/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"item_recommend",
 						""
 					]
 				}

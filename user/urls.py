@@ -30,6 +30,6 @@ urlpatterns = [
     # path("kindof/", views.kindof, name="kindof"),
     # path("kind/<int:kind_id>/", views.kind, name="kind"),
     # path("week_reco/", views.reco_by_week, name="week_reco"),
-    # path("item_recommend/", views.item_recommend, name="item_recommend"),
+    path("item_recommend/", views.item_recommend, name="item_recommend"),
     # path("monthitem/", views.reco_by_week, name="monthitem"),
 ]

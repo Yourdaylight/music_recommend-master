@@ -4,7 +4,7 @@ from functools import wraps
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpResponse,JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
@@ -39,18 +39,15 @@ def musics_paginator(musics, page):
     return musics
 
 
-
-
-
 def login(request):
     if request.method == "POST":
         form = request.POST
         if form:
             username = form.get("username", "")
             password = form.get("password", "")
-            result = User.objects.filter(username=username)
+            result = User.objects.filter(name=username)
             if result:
-                user = User.objects.get(username=username)
+                user = User.objects.get(name=username)
                 if user.password == password:
                     return JsonResponse({"code": 200, "msg": "登录成功"})  # 跳转到登录界面
                 else:
@@ -132,7 +129,7 @@ def search(request):
             res["word_cloud"] = word_frequency(music_id)
 
     except Exception as e:
-        code, msg = 500, "查询失败！"+str(e)
+        code, msg = 500, "查询失败！" + str(e)
     return JsonResponse({"code": code, "msg": msg, "data": res})
 
 
@@ -166,7 +163,7 @@ def mycollect(request):
     data = []
     try:
         username = request.POST.get("username")
-        user = User.objects.get(username=username)
+        user = User.objects.get(name=username)
         music = user.music_set.all()
         if music:
             data = [item for item in music.values()]
@@ -190,7 +187,7 @@ def collect(request, music_id):
     code, msg = 200, "收藏成功"
     try:
         username = request.POST.get("username")
-        user = User.objects.get(username=username)
+        user = User.objects.get(name=username)
         music = Music.objects.filter(sump=music_id)[0]
         music.collect.add(user)
         music.save()
@@ -205,7 +202,7 @@ def decollect(request, music_id):
     code, msg = 200, "取消收藏成功"
     try:
         username = request.POST.get("username")
-        user = User.objects.get(username=username)
+        user = User.objects.get(name=username)
         music = Music.objects.filter(sump=music_id)[0]
         music.collect.remove(user)
         music.save()
@@ -214,4 +211,15 @@ def decollect(request, music_id):
     return JsonResponse({"code": code, "msg": msg})
 
 
-
+@require_http_methods(["POST"])
+def item_recommend(request):
+    """物品推荐"""
+    code, msg = 200, "推荐成功"
+    data = []
+    try:
+        username = request.POST.get("username")
+        user = Music.objects.all()[:5].values()
+        data = [i for i in user]
+    except Exception as e:
+        code, msg = 500, str(e)
+    return JsonResponse({"code": code, "msg": msg, "data": data})

@@ -21,7 +21,7 @@ def save_to_database(item):
                                         artist=item.get('artist', "未知歌手"),
                                         pic=item.get("pic", "https://p2.music.126.net/G91csin09maPrNgqcUKnBQ==/109951165698553069.jpg?param=50y50"),
                                         album=item.get("album", "未知"), comments=item.get("comment"),
-                                        years=item.get("years"), num=item.get("num"))
+                                        years=item.get("years"), num=item.get("num"), reviewer=item.get("reviewer"))
     except Exception as e:
         traceback.print_exc()
 
@@ -54,15 +54,13 @@ def get_hotComments(hot_song_name, hot_song_id, album, artist, pic_url):
         res["artist"] = artist
         res["album"] = album
         res["pic"] = pic_url
+        res["reviewer"] = item.get("user",{}).get("nickname")
         save_to_database(res)
         num += 1
         print(str(num) + '.' + item['content'] + '\n')
     # 针对所有评论存一份到详情表用作词云
     from user.nlp_utils.lda_model import get_tags
-    tags = get_tags(hot_song_id)
-    rate = sum(tags.values())
-    Detail.objects.get_or_create(comments="".join(all_comments), sump=hot_song_id,
-                                 tags=json.dumps(tags), rate=rate)
+    Detail.objects.get_or_create(comments="".join(all_comments), sump=hot_song_id)
 
 
 

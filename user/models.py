@@ -38,6 +38,7 @@ class Music(models.Model):
     album = models.CharField(verbose_name='专辑名称', max_length=128)
     years = models.CharField(verbose_name="年份", max_length=128)
     comments = models.TextField(verbose_name="评论")
+    reviewer = models.TextField(verbose_name="评论者id")
     num = models.IntegerField(verbose_name="浏览量", default=0)
     pic = models.URLField(verbose_name="封面图片", max_length=512)
 
