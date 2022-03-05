@@ -4,15 +4,15 @@ from functools import wraps
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.http import HttpResponse,JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
-from rest_framework.renderers import JSONRenderer
 
 from cache_keys import ITEM_CACHE
 from .forms import *
 from .recommend_musics import recommend_by_item_id
+from user.nlp_utils.lda_model import get_tags, word_frequency
 
 logger = logging.getLogger()
 logger.setLevel(level=0)
@@ -39,11 +39,7 @@ def musics_paginator(musics, page):
     return musics
 
 
-class JSONResponse(HttpResponse):
-    def __init__(self, data, **kwargs):
-        content = JSONRenderer().render(data)
-        kwargs["content_type"] = "application/json"
-        super(JSONResponse, self).__init__(content, **kwargs)
+
 
 
 def login(request):
@@ -56,13 +52,13 @@ def login(request):
             if result:
                 user = User.objects.get(username=username)
                 if user.password == password:
-                    return JSONResponse({"code": 200, "msg": "登录成功"})  # 跳转到登录界面
+                    return JsonResponse({"code": 200, "msg": "登录成功"})  # 跳转到登录界面
                 else:
-                    return JSONResponse({"code": 500, "msg": "登录失败"})  # 跳转到登录界面
+                    return JsonResponse({"code": 500, "msg": "登录失败"})  # 跳转到登录界面
 
         else:
-            return JSONResponse({"code": 500, "msg": "登录失败，账户或者密码错误"})  # 跳转到登录界面
-    return JSONResponse({"code": 500, "msg": "登录失败，账户或者密码错误"})
+            return JsonResponse({"code": 500, "msg": "登录失败，账户或者密码错误"})  # 跳转到登录界面
+    return JsonResponse({"code": 500, "msg": "登录失败，账户或者密码错误"})
 
 
 def register(request):
@@ -86,13 +82,13 @@ def register(request):
                     address=address,
                 )
                 # 根据表单数据创建一个新的用户
-                return JSONResponse({"code": 200, "msg": "注册成功"})  # 跳转到登录界面
+                return JsonResponse({"code": 200, "msg": "注册成功"})  # 跳转到登录界面
         else:
-            return JSONResponse({"code": 500, "msg": "注册失败"})  # 跳转到登录界面
+            return JsonResponse({"code": 500, "msg": "注册失败"})  # 跳转到登录界面
     except Exception as e:
         msg = "用户名已存在" if "UNIQUE constraint" in str(e) else str(e)
-        return JSONResponse({"code": 500, "msg": msg})
-    return JSONResponse({"code": 500, "msg": "注册失败"})
+        return JsonResponse({"code": 500, "msg": msg})
+    return JsonResponse({"code": 500, "msg": "注册失败"})
 
 
 def logout(request):
@@ -103,7 +99,7 @@ def logout(request):
 
 
 def all_music(request):
-    """"""
+    """获取全部歌单信息"""
     musics = Music.objects.all().values()
     res = []
     temp_dict = {}
@@ -113,21 +109,31 @@ def all_music(request):
             temp_dict[music["name"]] = 1
             res.append(music)
 
-    return JSONResponse({"code": 200, "data": res, "msg": "查询成功"})
+    return JsonResponse({"code": 200, "data": res, "msg": "查询成功"})
 
 
-def search(request):  # 搜索
-    if request.method == "POST":  # 如果搜索界面
-        key = request.POST["search"]
-        request.session["search"] = key  # 记录搜索关键词解决跳页问题
-    else:
-        key = request.session.get("search")  # 得到关键词
-    musics = Music.objects.filter(
-        Q(name__icontains=key) | Q(lyric__icontains=key) | Q(artist__icontains=key)
-    )  # 进行内容的模糊搜索
-    page_num = request.GET.get("page", 1)
-    musics = musics_paginator(musics, page_num)
-    return render(request, "user/item.html", {"musics": musics})
+def search(request):
+    """首页查询"""
+    code, msg = 200, "查询成功"
+    res = {
+        "detail": {},
+        "topic": {},
+        "word_cloud": {}
+    }
+    try:
+        music_name = request.POST.get("music_name", "")
+        username = request.POST.get("username", "")
+        the_music = Music.objects.filter(name__contains=music_name)
+        if the_music:
+            music_id = the_music[0].sump
+            detail = Music.objects.filter(sump=music_id).values()
+            res["detail"] = [item for item in detail]
+            res["topic"] = get_tags(music_id)
+            res["word_cloud"] = word_frequency(music_id)
+
+    except Exception as e:
+        code, msg = 500, "查询失败！"+str(e)
+    return JsonResponse({"code": code, "msg": msg, "data": res})
 
 
 def music_detail(request, music_id):
@@ -146,9 +152,12 @@ def music_detail(request, music_id):
     try:
         detail = Music.objects.filter(sump=music_id).values()
         res["detail"] = [item for item in detail]
+        res["topic"] = get_tags(music_id)
+        res["word_cloud"] = word_frequency(music_id)
     except Exception as e:
         msg = str(e)
-    return JSONResponse({"data": res, "code": 200, "msg": msg})
+        code = 500
+    return JsonResponse({"code": code, "msg": msg, "data": res})
 
 
 @require_http_methods(["POST"])
@@ -163,10 +172,10 @@ def mycollect(request):
             data = [item for item in music.values()]
     except Exception as e:
         code, msg = 500, str(e)
-    return JSONResponse({
-        "data":data,
-        "code":code,
-        "msg":msg
+    return JsonResponse({
+        "data": data,
+        "code": code,
+        "msg": msg
     })
 
 
@@ -187,7 +196,7 @@ def collect(request, music_id):
         music.save()
     except Exception as e:
         code, msg = 500, str(e)
-    return JSONResponse({"code": code, "msg": msg})
+    return JsonResponse({"code": code, "msg": msg})
 
 
 @require_http_methods(["POST"])
@@ -202,24 +211,7 @@ def decollect(request, music_id):
         music.save()
     except Exception as e:
         code, msg = 500, str(e)
-    return JSONResponse({"code": code, "msg": msg})
+    return JsonResponse({"code": code, "msg": msg})
 
 
-@login_in
-def item_recommend(request):
-    page = request.GET.get("page", 1)
-    user_id = request.session.get("user_id")
-    cache_key = ITEM_CACHE.format(user_id=user_id)
-    music_list = cache.get(cache_key)
-    if music_list is None:
-        music_list = recommend_by_item_id(user_id)
-        cache.set(cache_key, music_list, 60 * 5)
-        print('设置缓存')
-    else:
-        print('缓存命中!')
-    musics = musics_paginator(music_list, page)
-    path = request.path
-    title = "依据item推荐"
-    return render(
-        request, "user/item.html", {"musics": musics, "path": path, "title": title}
-    )
+

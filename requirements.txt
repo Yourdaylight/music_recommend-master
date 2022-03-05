@@ -1,5 +1,5 @@
-django==2.2.1
-pymysql
+django~=3.0.7
+pymysql~=0.10.1
 icecola
 django-appconf==1.0.3
 django-bootstrap-toolkit==2.15.0
@@ -13,5 +13,11 @@ django-redis==4.10.0
 django-registration-redux==2.5
 django-rest-swagger==2.2.0
 django-simpleui==2.1
-djangorestframework==3.9.1
+djangorestframework~=3.11.1
 Pillow==5.4.1
+jieba~=0.42.1
+pandas~=1.1.5
+gensim~=3.8.2
+requests~=2.23.0
+bs4~=0.0.1
+beautifulsoup4~=4.6.0

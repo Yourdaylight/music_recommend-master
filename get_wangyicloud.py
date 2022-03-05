@@ -58,7 +58,11 @@ def get_hotComments(hot_song_name, hot_song_id, album, artist, pic_url):
         num += 1
         print(str(num) + '.' + item['content'] + '\n')
     # 针对所有评论存一份到详情表用作词云
-    Detail.objects.get_or_create(comments="".join(all_comments), sump=hot_song_id)
+    from user.nlp_utils.lda_model import get_tags
+    tags = get_tags(hot_song_id)
+    rate = sum(tags.values())
+    Detail.objects.get_or_create(comments="".join(all_comments), sump=hot_song_id,
+                                 tags=json.dumps(tags), rate=rate)
 
 
 
