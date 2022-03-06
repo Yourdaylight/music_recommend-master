@@ -27,7 +27,7 @@ SECRET_KEY = "r^n(t&=!%nn!+5*^qsto_7o0b41x-*uo1u01)^px-71xbj!u4s"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'music1.colaplusice.com',"s3.nsloop.com"]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'music1.colaplusice.com',"s3.nsloop.com","101.35.53.113"]
 
 # Application definition
 
