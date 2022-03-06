@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import re
 import time
 import traceback
 
@@ -12,6 +11,7 @@ from bs4 import BeautifulSoup
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "music.settings")
 django.setup()
 from user.models import Music, Detail
+from user.nlp_utils.lda_model import get_tags
 
 
 def save_to_database(item):
@@ -24,7 +24,6 @@ def save_to_database(item):
                                         years=item.get("years"), num=item.get("num"), reviewer=item.get("reviewer"))
     except Exception as e:
         traceback.print_exc()
-
 
 
 def get_hotComments(hot_song_name, hot_song_id, album, artist, pic_url):
@@ -40,7 +39,7 @@ def get_hotComments(hot_song_name, hot_song_id, album, artist, pic_url):
     request = requests.post(url, headers=header, data=data)
     json_dict = request.json()
     hot_comments = json_dict.get('hotComments', [])  # 获取json中的热门评论
-    all_comments = [item.get("content") for item in json_dict.get("comments",[])]
+    all_comments = [item.get("content") for item in json_dict.get("comments", [])]
     num = 0
     for item in hot_comments:
         liked_count = item.get("likedCount", 0)
@@ -54,14 +53,29 @@ def get_hotComments(hot_song_name, hot_song_id, album, artist, pic_url):
         res["artist"] = artist
         res["album"] = album
         res["pic"] = pic_url
-        res["reviewer"] = item.get("user",{}).get("nickname")
+        res["reviewer"] = item.get("user", {}).get("nickname")
         save_to_database(res)
         num += 1
         print(str(num) + '.' + item['content'] + '\n')
     # 针对所有评论存一份到详情表用作词云
-    from user.nlp_utils.lda_model import get_tags
     Detail.objects.get_or_create(comments="".join(all_comments), sump=hot_song_id)
 
+
+def calculate_all():
+    """计算所有歌曲的评分"""
+    for detail in Detail.objects.all():
+        topic = get_tags(detail.sump)
+        # 主题中加入歌手名称，分值取所有主题的均值
+        music = Music.objects.filter(sump=detail.sump).values()
+        artist = music[0].get("artist")
+        artist_score = sum(topic.values()) / len(topic)
+        if topic.get(artist):
+            topic[artist] += artist_score
+        else:
+            topic[artist] = artist_score
+        detail.tags = json.dumps(topic)
+        detail.rate = sum(topic.values()) * 10000
+        detail.save()
 
 
 def main():
@@ -81,6 +95,7 @@ def main():
     # 找到json数据
     textarea = soup.find('textarea').text
     contents = json.loads(str(textarea))
+    # 解析歌曲详情信息并存入数据库
     for item in contents:
         # 发行时间
         t1 = time.localtime(item.get('publishTime') / 1000)
@@ -102,6 +117,8 @@ def main():
         # 歌曲的id
         hot_song_id = item.get("id")
         get_hotComments(music_name, hot_song_id, album, artist, pic_url)
+    # 全部爬取完成后，开始计算每首歌的情感主题以及评分
+    calculate_all()
 
 
 if __name__ == '__main__':

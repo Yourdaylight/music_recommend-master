@@ -1,18 +1,15 @@
+import json
 import logging
 from functools import wraps
-
-from django.core.cache import cache
 from django.core.paginator import Paginator
-from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
-from cache_keys import ITEM_CACHE
 from .forms import *
-from .recommend_musics import recommend_by_item_id
 from user.nlp_utils.lda_model import get_tags, word_frequency
+from user.recommend_musics import recommend_by_item
 
 logger = logging.getLogger()
 logger.setLevel(level=0)
@@ -119,7 +116,6 @@ def search(request):
     }
     try:
         music_name = request.POST.get("music_name", "")
-        username = request.POST.get("username", "")
         the_music = Music.objects.filter(name__contains=music_name)
         if the_music:
             music_id = the_music[0].sump
@@ -149,7 +145,9 @@ def music_detail(request, music_id):
     try:
         detail = Music.objects.filter(sump=music_id).values()
         res["detail"] = [item for item in detail]
-        res["topic"] = get_tags(music_id)
+        res["topic"] = json.loads(Detail.objects.get(sump=detail[0].get("sump",0)).tags)
+        # 主题分值排序
+        res["topic"] = dict(sorted(res["topic"].items(), key=lambda x: x[1], reverse=True))
         res["word_cloud"] = word_frequency(music_id)
     except Exception as e:
         msg = str(e)
@@ -215,11 +213,11 @@ def decollect(request, music_id):
 def item_recommend(request):
     """物品推荐"""
     code, msg = 200, "推荐成功"
-    data = []
+    res = []
     try:
         username = request.POST.get("username")
-        user = Music.objects.all()[:5].values()
-        data = [i for i in user]
+        res = recommend_by_item(username)
+        return JsonResponse({"code": code, "msg": "查询成功","data": res})
     except Exception as e:
         code, msg = 500, str(e)
-    return JsonResponse({"code": code, "msg": msg, "data": data})
+    return JsonResponse({"code": code, "msg": msg, "data": res})
