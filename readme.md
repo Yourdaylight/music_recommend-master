@@ -6,7 +6,7 @@
 
 前端: vue 框架
 后端: django 2.2.1 + sqlite3数据库  (MVC框架)
-数据: python异步爬虫从豆瓣top250抓取数据，保存到本地csv文件中
+数据: python从网易云热榜爬取歌曲信息，保存到数据库中
 主要功能: 展示音乐信息，根据收藏进行推荐
 
 
@@ -68,9 +68,7 @@
 ## 运行
 
 1. 运行服务器: python manage.py runserver
-2. 如果无数据，运行项目根目录下的数据迁移脚本 populate开头。
-3. python manage.py createsuperuser 创建超级管理员, (密码输入时终端暂时看不到)
-4. 进入后台: 127.0.0.1:8000/admin
+
 
 需要获得永久更新和维护支持请联系我
 其他问题请联系我
